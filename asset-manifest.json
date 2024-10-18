@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/competency-graph/static/css/main.e6c13ad2.css",
+    "main.js": "/competency-graph/static/js/main.6e8c695a.js",
+    "static/js/453.d8566831.chunk.js": "/competency-graph/static/js/453.d8566831.chunk.js",
+    "index.html": "/competency-graph/index.html",
+    "main.e6c13ad2.css.map": "/competency-graph/static/css/main.e6c13ad2.css.map",
+    "main.6e8c695a.js.map": "/competency-graph/static/js/main.6e8c695a.js.map",
+    "453.d8566831.chunk.js.map": "/competency-graph/static/js/453.d8566831.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.6e8c695a.js"
+  ]
+}
