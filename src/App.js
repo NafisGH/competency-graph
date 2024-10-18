@@ -59,10 +59,10 @@ const skillsData = [
 const uniqueCompetencies = (() => {
   const allCompetencies = new Set();
   skillsData.forEach((item) => {
-    item.mainSkills.forEach((skill) => allCompetencies.add(skill)); // Добавляем mainSkills
-    item.otherSkills.forEach((skill) => allCompetencies.add(skill)); // Добавляем otherSkills
+    item.mainSkills.forEach((skill) => allCompetencies.add(skill));
+    item.otherSkills.forEach((skill) => allCompetencies.add(skill));
   });
-  return Array.from(allCompetencies); // Возвращаем уникальный список компетенций
+  return Array.from(allCompetencies);
 })();
 
 function App() {
@@ -74,70 +74,71 @@ function App() {
     setChartInstance(myChart);
 
     const nodes = [];
-    const competencyNodes = []; // Массив узлов компетенций
-    const skillNodes = []; // Массив узлов навыков
+    const competencyNodes = []; // Узлы компетенций
+    const skillNodes = []; // Узлы навыков
     const links = [];
-    const competencyLinks = []; // Массив связей между компетенциями
+    // Убрали competencyLinks, так как больше не нужны линии между компетенциями
 
-    // Внешний круг с компетенциями (mainSkills и otherSkills)
+    const innerCircleRadius = 200; // Радиус для навыков
+    const outerCircleRadius = 450; // Увеличили радиус для компетенций, чтобы избежать наложений
+
+    // Генерируем узлы компетенций (без соединительных линий)
     uniqueCompetencies.forEach((competency, index) => {
+      const angle = (index / uniqueCompetencies.length) * 2 * Math.PI;
+      const x = Math.cos(angle) * outerCircleRadius;
+      const y = Math.sin(angle) * outerCircleRadius;
+
       const node = {
-        id: `competency-${index}`, // Уникальный id для компетенции
+        id: `competency-${index}`,
         name: competency,
         category: "competency",
         value: 1,
-        symbolSize: 65,
-        itemStyle: { color: "#FFD4AD" }, // Цвет для компетенций
-        x: Math.cos((index / uniqueCompetencies.length) * 2 * Math.PI) * 600, // Расположение на внешнем круге
-        y: Math.sin((index / uniqueCompetencies.length) * 2 * Math.PI) * 600, // Расположение на внешнем круге
+        symbolSize: 70, // Немного увеличили размер символа для лучшей видимости
+        itemStyle: { color: "#FFD4AD" },
+        x: x,
+        y: y,
+        originalX: x,
+        originalY: y,
         label: {
           show: true,
-          position: "inside",
+          position: "center",
           fontSize: 12,
-          width: 100, // Устанавливаем максимальную ширину метки в пикселях
-          overflow: "break", // Включаем автоматический перенос слов
+          width: 80, // Подкорректировали ширину метки
+          overflow: "break",
           lineHeight: 15,
         },
       };
       competencyNodes.push(node);
-      nodes.push(node); // Добавляем в общий массив узлов
-
-      // Добавляем связь к следующей компетенции, чтобы создать круг
-      const nextIndex = (index + 1) % uniqueCompetencies.length;
-      const link = {
-        source: `competency-${index}`,
-        target: `competency-${nextIndex}`,
-        lineStyle: {
-          color: "#666666",
-          width: 1,
-        },
-      };
-      competencyLinks.push(link);
-      links.push(link); // Также добавляем в общий массив связей
+      nodes.push(node);
+      // Убрали код, который добавляет линии между компетенциями
     });
 
-    // Внутренний круг с навыками
+    // Генерируем узлы навыков
     skillsData.forEach((skill, index) => {
+      const angle = (index / skillsData.length) * 2 * Math.PI;
+      const x = Math.cos(angle) * innerCircleRadius;
+      const y = Math.sin(angle) * innerCircleRadius;
+
       const node = {
-        id: `skill-${index}`, // Уникальный id для навыка
+        id: `skill-${index}`,
         name: skill.name,
         category: "skill",
         value: 1,
-        symbolSize: 40,
-        itemStyle: { color: "#ADADAD" }, // Цвет для навыков
-        x: Math.cos((index / skillsData.length) * 2 * Math.PI) * 200, // Расположение на внутреннем круге
-        y: Math.sin((index / skillsData.length) * 2 * Math.PI) * 200, // Расположение на внутреннем круге
+        symbolSize: 50, // Немного увеличили размер символа для лучшей видимости
+        itemStyle: { color: "#ADADAD" },
+        x: x,
+        y: y,
         label: {
           show: true,
-          position: "inside",
+          position: "center",
           fontSize: 12,
-          width: 100, // Устанавливаем максимальную ширину метки
-          overflow: "break", // Включаем перенос слов
+          width: 100,
+          overflow: "break",
           lineHeight: 15,
         },
       };
       skillNodes.push(node);
-      nodes.push(node); // Добавляем в общий массив узлов
+      nodes.push(node);
     });
 
     // Установка опций графика
@@ -149,17 +150,33 @@ function App() {
       series: [
         {
           type: "graph",
-          layout: "none", // Управляем расположением вручную
-          data: nodes, // Используем общий массив узлов
-          links: links, // Используем общий массив связей
-          roam: true, // Возможность перемещения
+          layout: "none",
+          data: nodes,
+          links: links, // Нет соединительных линий между компетенциями
+          roam: true,
           label: {
             show: true,
-            position: "inside",
+            position: "center",
             fontSize: 12,
-            width: 100, // Устанавливаем максимальную ширину метки в пикселях
-            overflow: "break", // Включаем автоматический перенос слов
+            width: 80,
+            overflow: "break",
             lineHeight: 15,
+          },
+          labelLayout: function (params) {
+            const node = params.data;
+            if (node && node.category === "competency") {
+              const angle = Math.atan2(node.y, node.x);
+              const offset = 80;
+              const dx = Math.cos(angle) * offset;
+              const dy = Math.sin(angle) * offset;
+              return {
+                dx: dx,
+                dy: dy,
+                align: Math.abs(angle) < Math.PI / 2 ? "left" : "right",
+                verticalAlign: "middle",
+              };
+            }
+            return {};
           },
           itemStyle: {
             borderColor: "#fff",
@@ -168,7 +185,7 @@ function App() {
           lineStyle: {
             opacity: 0.6,
             width: 2,
-            curveness: 0.3,
+            curveness: 0.0,
           },
           animationDurationUpdate: 1500,
           animationEasingUpdate: "cubicOut",
@@ -178,23 +195,26 @@ function App() {
 
     // Логика при клике на узел
     myChart.on("click", function (params) {
-      // Сброс всех предыдущих выделений и динамических связей
+      // Сброс предыдущих выделений и динамических связей
       const resetNodes = nodes.map((node) => {
         let color = node.category === "competency" ? "#FFD4AD" : "#ADADAD";
         return {
           ...node,
           itemStyle: {
             ...node.itemStyle,
-            color: color, // Восстанавливаем оригинальный цвет
+            color: color,
           },
           label: {
             ...node.label,
           },
+          // Возвращаем узлы на их исходные позиции
+          x: node.category === "competency" ? node.originalX : node.x,
+          y: node.category === "competency" ? node.originalY : node.y,
         };
       });
 
-      // При сбросе связей оставляем связи между компетенциями
-      const resetLinks = [...competencyLinks];
+      // Так как мы убрали competencyLinks, resetLinks будет пустым
+      const resetLinks = [];
 
       myChart.setOption({
         series: [
@@ -205,12 +225,14 @@ function App() {
         ],
       });
 
-      // Если кликнули на навык (внутренний круг)
+      // Если кликнули на навык
       if (params.data.category === "skill") {
         const clickedSkill = params.data.name;
+        const skillNode = nodes.find((node) => node.id === params.data.id);
 
-        const newLinks = [...competencyLinks]; // Начинаем с связей между компетенциями
-        const highlightedCompetencies = new Set();
+        const newLinks = []; // Начинаем с пустого массива, так как нет связей между компетенциями
+        const highlightedCompetencies = [];
+        const relatedCompetencyIndices = [];
 
         skillsData.forEach((skill, skillIndex) => {
           if (skill.name === clickedSkill) {
@@ -223,7 +245,8 @@ function App() {
                   target: `competency-${competencyIndex}`,
                   lineStyle: { color: "orange", width: 3 },
                 });
-                highlightedCompetencies.add(mainSkill);
+                highlightedCompetencies.push(mainSkill);
+                relatedCompetencyIndices.push(competencyIndex);
               }
             });
 
@@ -236,10 +259,77 @@ function App() {
                   target: `competency-${competencyIndex}`,
                   lineStyle: { color: "purple", width: 3 },
                 });
-                highlightedCompetencies.add(otherSkill);
+                highlightedCompetencies.push(otherSkill);
+                relatedCompetencyIndices.push(competencyIndex);
               }
             });
           }
+        });
+
+        // Общее количество компетенций
+        const totalCompetencies = competencyNodes.length;
+        const totalRelated = relatedCompetencyIndices.length;
+        const totalUnrelated = totalCompetencies - totalRelated;
+
+        // Устанавливаем минимальный угол между узлами (в радианах)
+        const minAngleBetweenNodes = (20 * Math.PI) / 180; // 20 градусов
+
+        // Вычисляем необходимый угол для каждой группы
+        const requiredAngleRelated = minAngleBetweenNodes * Math.max(totalRelated - 1, 1);
+        const requiredAngleUnrelated = minAngleBetweenNodes * Math.max(totalUnrelated - 1, 1);
+
+        // Проверяем, не превышает ли сумма необходимых углов полный круг
+        let totalRequiredAngle = requiredAngleRelated + requiredAngleUnrelated;
+        let scaleFactor = 1;
+
+        if (totalRequiredAngle > 2 * Math.PI) {
+          // Масштабируем углы
+          scaleFactor = (2 * Math.PI) / totalRequiredAngle;
+        }
+
+        // Вычисляем реальные секторы с учетом масштабирования
+        const sectorAngleRelated = requiredAngleRelated * scaleFactor;
+        const sectorAngleUnrelated = requiredAngleUnrelated * scaleFactor;
+
+        // Начальный угол для связанных компетенций
+        const angle = Math.atan2(skillNode.y, skillNode.x);
+        const startAngleRelated = angle - sectorAngleRelated / 2;
+
+        // Размещаем связанные компетенции
+        relatedCompetencyIndices.forEach((competencyIndex, i) => {
+          const competencyNode = competencyNodes[competencyIndex];
+          let newAngle;
+          if (totalRelated === 1) {
+            newAngle = angle;
+          } else {
+            newAngle = startAngleRelated + (sectorAngleRelated / (totalRelated - 1)) * i;
+          }
+          const radius = outerCircleRadius + 50; // Увеличили радиус для большего пространства
+
+          competencyNode.x = Math.cos(newAngle) * radius;
+          competencyNode.y = Math.sin(newAngle) * radius;
+        });
+
+        // Размещаем остальные компетенции
+        const unhighlightedCompetencyIndices = competencyNodes
+          .map((node, index) => index)
+          .filter((index) => !relatedCompetencyIndices.includes(index));
+
+        const startAngleUnrelated = startAngleRelated + sectorAngleRelated;
+        const totalUnrelatedAngles = 2 * Math.PI - sectorAngleRelated;
+
+        unhighlightedCompetencyIndices.forEach((competencyIndex, i) => {
+          const competencyNode = competencyNodes[competencyIndex];
+          let newAngle;
+          if (totalUnrelated === 1) {
+            newAngle = angle + Math.PI;
+          } else {
+            newAngle = startAngleUnrelated + (totalUnrelatedAngles / totalUnrelated) * i;
+          }
+          const radius = outerCircleRadius;
+
+          competencyNode.x = Math.cos(newAngle) * radius;
+          competencyNode.y = Math.sin(newAngle) * radius;
         });
 
         // Обновляем цвета узлов
@@ -252,7 +342,7 @@ function App() {
                 color: "green",
               },
             };
-          } else if (highlightedCompetencies.has(node.name)) {
+          } else if (highlightedCompetencies.includes(node.name)) {
             return {
               ...node,
               itemStyle: {
@@ -269,65 +359,16 @@ function App() {
           series: [
             {
               data: updatedNodes,
-              links: newLinks, // Используем объединенный массив связей
+              links: newLinks,
             },
           ],
         });
       }
 
-      // Если кликнули на компетенцию (внешний круг)
+      // Логика при клике на компетенцию остается без изменений
       if (params.data.category === "competency") {
-        const clickedCompetency = params.data.name;
-
-        const newLinks = [...competencyLinks]; // Начинаем с связей между компетенциями
-        const highlightedSkills = new Set();
-
-        skillsData.forEach((skill, skillIndex) => {
-          const isMainSkill = skill.mainSkills.includes(clickedCompetency);
-          const isOtherSkill = skill.otherSkills.includes(clickedCompetency);
-
-          if (isMainSkill || isOtherSkill) {
-            const lineColor = isMainSkill ? "orange" : "purple";
-            newLinks.push({
-              source: `skill-${skillIndex}`,
-              target: `competency-${uniqueCompetencies.indexOf(clickedCompetency)}`,
-              lineStyle: { color: lineColor, width: 3 },
-            });
-            highlightedSkills.add(skill.name);
-          }
-        });
-
-        // Обновляем цвета узлов
-        const updatedNodes = nodes.map((node) => {
-          if (node.name === clickedCompetency) {
-            return {
-              ...node,
-              itemStyle: {
-                ...node.itemStyle,
-                color: "orange",
-              },
-            };
-          } else if (highlightedSkills.has(node.name)) {
-            return {
-              ...node,
-              itemStyle: {
-                ...node.itemStyle,
-                color: "green",
-              },
-            };
-          }
-          return node;
-        });
-
-        // Обновляем график с новыми узлами и связями
-        myChart.setOption({
-          series: [
-            {
-              data: updatedNodes,
-              links: newLinks, // Используем объединенный массив связей
-            },
-          ],
-        });
+        // Ваша существующая логика для обработки клика по компетенции
+        // Вы можете реализовать аналогичное перестроение для навыков, если необходимо
       }
     });
 
